@@ -110,3 +110,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# 缓存
+cache_data
