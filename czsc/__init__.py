@@ -12,6 +12,7 @@ from rs_czsc import (
     WeightBacktest,
 )
 
+import json
 from czsc import envs
 from czsc import fsa
 from czsc import utils
@@ -225,10 +226,18 @@ from czsc.eda import (
     limit_leverage,
 )
 
+# 从文件中读取JSON数据
+with open("./czsc/publish.config.json", "r", encoding="utf-8") as file:
+    publish_config_data = json.load(file)
 
-__version__ = "0.9.63"
-__author__ = "zengbin93"
-__email__ = "zeng_bin8888@163.com"
+# 打印读取的信息
+print("Version:", publish_config_data["version"])
+print("Author:", publish_config_data["author"])
+print("Email:", publish_config_data["email"])
+
+__version__ = publish_config_data["version"]
+__author__ = publish_config_data["author"]
+__email__ = publish_config_data["email"]
 __date__ = "20250101"
 
 

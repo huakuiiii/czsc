@@ -1,6 +1,6 @@
 # coding: utf-8
-import czsc
 from os import path
+import json
 from setuptools import setup, find_packages
 
 here = path.abspath(path.dirname(__file__))
@@ -11,11 +11,15 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
 with open(path.join(here, "requirements.txt"), encoding="utf-8") as f:
     install_requires = f.read().strip().split("\n")
 
+# 从文件中读取JSON数据
+with open("./czsc/publish.config.json", "r", encoding="utf-8") as file:
+    public_config_data = json.load(file)
+
 setup(
     name="czsc",
-    version=czsc.__version__,
-    author=czsc.__author__,
-    author_email=czsc.__email__,
+    version=public_config_data["version"],
+    author=public_config_data["author"],
+    author_email=public_config_data["email"],
     keywords=["缠论", "技术分析", "A股", "期货", "缠中说禅", "量化", "QUANT", "程序化交易"],
     description="缠中说禅技术分析工具",
     long_description=long_description,
