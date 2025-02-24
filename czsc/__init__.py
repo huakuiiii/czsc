@@ -227,7 +227,7 @@ from czsc.eda import (
 )
 
 # 从文件中读取JSON数据
-with open("./czsc/publish.config.json", "r", encoding="utf-8") as file:
+with open("./publish.config.json", "r", encoding="utf-8") as file:
     publish_config_data = json.load(file)
 
 # 打印读取的信息
