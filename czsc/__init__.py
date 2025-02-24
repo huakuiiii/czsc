@@ -11,6 +11,7 @@ from rs_czsc import (
     # python版本：from czsc.traders.weight_backtest import WeightBacktest
     WeightBacktest,
 )
+from pathlib import Path
 
 import json
 from czsc import envs
@@ -227,7 +228,7 @@ from czsc.eda import (
 )
 
 # 从文件中读取JSON数据
-with open("./publish.config.json", "r", encoding="utf-8") as file:
+with open(Path(__file__).parent / "publish.config.json", "r", encoding="utf-8") as file:
     publish_config_data = json.load(file)
 
 # 打印读取的信息
