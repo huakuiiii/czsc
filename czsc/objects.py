@@ -227,8 +227,8 @@ class BI:
         """
         return {
             "direction": self.direction.value,
-            "sdt": self.sdt.timestamp() * 1000,
-            "edt": self.edt.timestamp() * 1000,
+            "start_time": self.sdt.timestamp() * 1000,
+            "end_time": self.edt.timestamp() * 1000,
             "start_value": self.fx_a.fx,
             "end_value": self.fx_b.fx
         }
