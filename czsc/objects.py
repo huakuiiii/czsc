@@ -17,7 +17,10 @@ from deprecated import deprecated
 from typing import List, Callable, Dict
 from czsc.enum import Mark, Direction, Freq, Operate
 from czsc.utils.corr import single_linear
+from zoneinfo import ZoneInfo
 
+# 获取北京时间的时区对象
+beijing_tz = ZoneInfo('Asia/Shanghai')
 
 @deprecated(version="1.0.0", reason="请使用 RawBar")
 @dataclass
@@ -208,14 +211,27 @@ class BI:
     cache: dict = field(default_factory=dict)  # cache 用户缓存
 
     def __post_init__(self):
-        self.sdt = self.fx_a.dt
-        self.edt = self.fx_b.dt
+        self.sdt = self.fx_a.dt.tz_localize(beijing_tz)
+        self.edt = self.fx_b.dt.tz_localize(beijing_tz)
 
     def __repr__(self):
         return (
             f"BI(symbol={self.symbol}, sdt={self.sdt}, edt={self.edt}, "
             f"direction={self.direction}, high={self.high}, low={self.low})"
         )
+
+    def to_draw(self) -> dict:
+        """将BI对象序列化为字典
+        
+        :return: 包含BI对象所有关键信息的字典
+        """
+        return {
+            "direction": self.direction.value,
+            "sdt": self.sdt.timestamp() * 1000,
+            "edt": self.edt.timestamp() * 1000,
+            "start_value": self.fx_a.fx,
+            "end_value": self.fx_b.fx
+        }
 
     def get_cache_with_default(self, key, default: Callable):
         """带有默认值计算的缓存读取

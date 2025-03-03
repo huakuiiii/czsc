@@ -246,9 +246,9 @@ def generate_czsc_signals(bars: List[RawBar], signals_config: List[dict],
         _sigs.append(dict(cs.s))
 
     if df:
-        return pd.DataFrame(_sigs)
+        return pd.DataFrame(_sigs), cs.kas
     else:
-        return _sigs
+        return _sigs, cs.kas
 
 
 def check_signals_acc(bars: List[RawBar], signals_config: List[dict], delta_days: int = 5, **kwargs) -> None:
