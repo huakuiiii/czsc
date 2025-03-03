@@ -226,7 +226,6 @@ class BI:
         :return: 包含BI对象所有关键信息的字典
         """
         return {
-            "direction": self.direction.value,
             "start_time": self.sdt.timestamp() * 1000,
             "end_time": self.edt.timestamp() * 1000,
             "start_value": self.fx_a.fx,
