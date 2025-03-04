@@ -224,7 +224,7 @@ class CZSC:
         # 判断新笔是否破坏当前中枢
         if (bi.direction == Direction.Up and bi.high < self._current_zs.zd) or (bi.direction == Direction.Down and bi.low > self._current_zs.zg):
             # 新笔破坏了当前中枢
-            if len(self._current_zs.bis) >= 3:
+            if len(self._current_zs.bis) >= 3 and self._current_zs not in self.zs_list:
                 # 当前中枢完成，加入中枢列表
                 self.zs_list.append(self._current_zs)
             
@@ -285,13 +285,6 @@ class CZSC:
             # 必须是 -2，因为最后一根无包含K线有可能是未完成的
             self.bars_ubi = last_bi.bars[:-2] + [x for x in bars_ubi if x.dt >= last_bi.bars[-2].dt]
             self.bi_list.pop(-1)
-            # 重置当前中枢状态
-            if self.zs_list and self._current_zs and last_bi in self._current_zs.bis:
-                self.zs_list.pop()
-                if len(self.zs_list) > 0:
-                    self._current_zs = self.zs_list[-1]
-                else:
-                    self._current_zs = None
 
     def update(self, bar: RawBar):
         """更新分析结果
