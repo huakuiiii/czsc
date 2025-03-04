@@ -217,20 +217,26 @@ class CZSC:
         :param bi: 新生成的笔对象
         """
         if not self._current_zs:
-            # 如果没有当前中枢，创建新的中枢
+            # 如果没有当前中枢，需要至少三笔才能构成中枢
             self._current_zs = ZS(bis=[bi])
-            self.zs_list.append(self._current_zs)
             return
 
         # 判断新笔是否破坏当前中枢
-        if (bi.direction == Direction.Up and bi.high < self._current_zs.zd) or \
-           (bi.direction == Direction.Down and bi.low > self._current_zs.zg):
-            # 新笔破坏了当前中枢，创建新的中枢
+        if (bi.direction == Direction.Up and bi.high < self._current_zs.zd) or (bi.direction == Direction.Down and bi.low > self._current_zs.zg):
+            # 新笔破坏了当前中枢
+            if len(self._current_zs.bis) >= 3:
+                # 当前中枢完成，加入中枢列表
+                self.zs_list.append(self._current_zs)
+            
+            # 开始新的中枢
             self._current_zs = ZS(bis=[bi])
-            self.zs_list.append(self._current_zs)
         else:
             # 新笔未破坏当前中枢，将其添加到当前中枢
             self._current_zs.bis.append(bi)
+            
+            # 如果当前中枢还未加入中枢列表，且已经有至少三笔，则加入中枢列表
+            if len(self._current_zs.bis) >= 3 and self._current_zs not in self.zs_list:
+                self.zs_list.append(self._current_zs)
 
     def __update_bi(self):
         bars_ubi = self.bars_ubi
