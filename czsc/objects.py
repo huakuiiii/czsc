@@ -211,8 +211,8 @@ class BI:
     cache: dict = field(default_factory=dict)  # cache 用户缓存
 
     def __post_init__(self):
-        self.sdt = self.fx_a.dt.tz_localize(beijing_tz)
-        self.edt = self.fx_b.dt.tz_localize(beijing_tz)
+        self.sdt = self.fx_a.dt
+        self.edt = self.fx_b.dt
 
     def __repr__(self):
         return (
@@ -226,8 +226,8 @@ class BI:
         :return: 包含BI对象所有关键信息的字典
         """
         return {
-            "start_time": self.sdt.timestamp() * 1000,
-            "end_time": self.edt.timestamp() * 1000,
+            "start_time": self.sdt.isoformat(),
+            "end_time": self.edt.isoformat(),
             "start_value": self.fx_a.fx,
             "end_value": self.fx_b.fx
         }
