@@ -11,7 +11,7 @@ from loguru import logger
 from typing import List
 from collections import OrderedDict
 from czsc.enum import Mark, Direction
-from czsc.objects import BI, FX, RawBar, NewBar
+from czsc.objects import BI, FX, RawBar, NewBar, ZS
 from czsc.utils.echarts_plot import kline_pro
 from czsc import envs
 
@@ -187,7 +187,6 @@ class CZSC:
                  max_bi_num=envs.get_max_bi_num(),
                  ):
         """
-
         :param bars: K线数据
         :param max_bi_num: 最大允许保留的笔数量
         :param get_signals: 自定义的信号计算函数
@@ -197,6 +196,8 @@ class CZSC:
         self.bars_raw: List[RawBar] = []  # 原始K线序列
         self.bars_ubi: List[NewBar] = []  # 未完成笔的无包含K线序列
         self.bi_list: List[BI] = []
+        self.zs_list: List[ZS] = []  # 中枢序列
+        self._current_zs: ZS = None  # 当前正在发展中的中枢
         self.symbol = bars[0].symbol
         self.freq = bars[0].freq
         self.get_signals = get_signals
@@ -209,6 +210,27 @@ class CZSC:
 
     def __repr__(self):
         return "<CZSC~{}~{}>".format(self.symbol, self.freq.value)
+
+    def __update_zs(self, bi: BI):
+        """更新中枢状态
+        
+        :param bi: 新生成的笔对象
+        """
+        if not self._current_zs:
+            # 如果没有当前中枢，创建新的中枢
+            self._current_zs = ZS(bis=[bi])
+            self.zs_list.append(self._current_zs)
+            return
+
+        # 判断新笔是否破坏当前中枢
+        if (bi.direction == Direction.Up and bi.high < self._current_zs.zd) or \
+           (bi.direction == Direction.Down and bi.low > self._current_zs.zg):
+            # 新笔破坏了当前中枢，创建新的中枢
+            self._current_zs = ZS(bis=[bi])
+            self.zs_list.append(self._current_zs)
+        else:
+            # 新笔未破坏当前中枢，将其添加到当前中枢
+            self._current_zs.bis.append(bi)
 
     def __update_bi(self):
         bars_ubi = self.bars_ubi
@@ -233,6 +255,8 @@ class CZSC:
             bi, bars_ubi_ = check_bi(bars_ubi)
             if isinstance(bi, BI):
                 self.bi_list.append(bi)
+                # 更新中枢
+                self.__update_zs(bi)
             self.bars_ubi = bars_ubi_
             return
 
@@ -243,6 +267,8 @@ class CZSC:
         self.bars_ubi = bars_ubi_
         if isinstance(bi, BI):
             self.bi_list.append(bi)
+            # 更新中枢
+            self.__update_zs(bi)
 
         # 后处理：如果当前笔被破坏，将当前笔的bars与bars_ubi进行合并，并丢弃
         last_bi = self.bi_list[-1]
@@ -253,6 +279,13 @@ class CZSC:
             # 必须是 -2，因为最后一根无包含K线有可能是未完成的
             self.bars_ubi = last_bi.bars[:-2] + [x for x in bars_ubi if x.dt >= last_bi.bars[-2].dt]
             self.bi_list.pop(-1)
+            # 重置当前中枢状态
+            if self.zs_list and self._current_zs and last_bi in self._current_zs.bis:
+                self.zs_list.pop()
+                if len(self.zs_list) > 0:
+                    self._current_zs = self.zs_list[-1]
+                else:
+                    self._current_zs = None
 
     def update(self, bar: RawBar):
         """更新分析结果
