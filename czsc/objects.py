@@ -393,6 +393,17 @@ class ZS:
     def __post_init__(self):
         self.symbol = self.bis[0].symbol
 
+    def to_draw(self) -> dict:
+        """将中枢对象序列化为字典，用于绘图
+        
+        :return: 包含中枢关键信息的字典，包括开始时间、结束时间、中枢上沿和中枢下沿
+        """
+        return {
+            "start_time": self.sdt.isoformat(),
+            "end_time": self.edt.isoformat(), 
+            "start_value": self.zd,
+            "end_value": self.zg
+        }
     @property
     def sdt(self):
         """中枢开始时间"""
