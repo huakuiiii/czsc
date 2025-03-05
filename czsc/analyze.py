@@ -197,7 +197,6 @@ class CZSC:
         self.bars_ubi: List[NewBar] = []  # 未完成笔的无包含K线序列
         self.bi_list: List[BI] = []
         self.zs_list: List[ZS] = []  # 中枢序列
-        self._current_zs: ZS = None  # 当前正在发展中的中枢
         self.symbol = bars[0].symbol
         self.freq = bars[0].freq
         self.get_signals = get_signals
@@ -216,28 +215,23 @@ class CZSC:
         
         :param bi: 新生成的笔对象
         """
-        if not self._current_zs:
-            # 如果没有当前中枢，需要至少三笔才能构成中枢
-            self._current_zs = ZS(bis=[bi])
+        if not self.zs_list:
+            self.zs_list.append(ZS(bis=[bi]))
             return
 
-        # 判断新笔是否破坏当前中枢
-        if (bi.direction == Direction.Up and bi.high < self._current_zs.zd) or (bi.direction == Direction.Down and bi.low > self._current_zs.zg):
-            # 新笔破坏了当前中枢
-            if len(self._current_zs.bis) >= 3 and self._current_zs not in self.zs_list:
-                # 当前中枢完成，加入中枢列表
-                self.zs_list.append(self._current_zs)
-            
-            # 开始新的中枢
-            self._current_zs = ZS(bis=[bi])
+        zs = self.zs_list[-1]
+        if not zs.bis:
+            zs.bis.append(bi)
+            self.zs_list[-1] = zs
         else:
-            # 新笔未破坏当前中枢，将其添加到当前中枢
-            self._current_zs.bis.append(bi)
+            if (bi.direction == Direction.Up and bi.high < zs.zd) or (
+                bi.direction == Direction.Down and bi.low > zs.zg
+            ):
+                self.zs_list.append(ZS(bis=[bi]))
+            else:
+                zs.bis.append(bi)
+                self.zs_list[-1] = zs
             
-            # 如果当前中枢还未加入中枢列表，且已经有至少三笔，则加入中枢列表
-            if len(self._current_zs.bis) >= 3 and self._current_zs not in self.zs_list:
-                self.zs_list.append(self._current_zs)
-
     def __update_bi(self):
         bars_ubi = self.bars_ubi
         if len(bars_ubi) < 3:
@@ -261,8 +255,6 @@ class CZSC:
             bi, bars_ubi_ = check_bi(bars_ubi)
             if isinstance(bi, BI):
                 self.bi_list.append(bi)
-                # 更新中枢
-                self.__update_zs(bi)
             self.bars_ubi = bars_ubi_
             return
 
@@ -273,8 +265,6 @@ class CZSC:
         self.bars_ubi = bars_ubi_
         if isinstance(bi, BI):
             self.bi_list.append(bi)
-            # 更新中枢
-            self.__update_zs(bi)
 
         # 后处理：如果当前笔被破坏，将当前笔的bars与bars_ubi进行合并，并丢弃
         last_bi = self.bi_list[-1]
