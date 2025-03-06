@@ -345,7 +345,7 @@ def get_zs_seq(bis: List[BI]) -> List[ZS]:
     if not bis:
         return []
 
-    for bi in bis:
+    for idx, bi in enumerate(bis):
         if not zs_list:
             zs_list.append(ZS(bis=[bi]))
             continue
@@ -358,7 +358,8 @@ def get_zs_seq(bis: List[BI]) -> List[ZS]:
             if (bi.direction == Direction.Up and bi.high < zs.zd) or (
                 bi.direction == Direction.Down and bi.low > zs.zg
             ):
-                zs_list.append(ZS(bis=[bi]))
+                zs.bis.pop(-1)
+                zs_list.append(ZS(bis=[bis[idx - 1], bi]))
             else:
                 zs.bis.append(bi)
                 zs_list[-1] = zs
