@@ -49,6 +49,7 @@ from czsc.signals.cxt import (
     cxt_decision_V240612,
     cxt_decision_V240614,
     cxt_decision_V240613,
+    cxt_double_zs_macd_bc_V250211
 )
 
 

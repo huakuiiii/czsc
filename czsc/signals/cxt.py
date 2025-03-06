@@ -2777,3 +2777,84 @@ def cxt_decision_V240614(c: CZSC, **kwargs) -> OrderedDict:
         v1 = "开空"
 
     return create_single_signal(k1=k1, k2=k2, k3=k3, v1=v1)
+
+
+def cxt_double_zs_macd_bc_V250211(c: CZSC, **kwargs):
+    """基于MACD的双中枢信号，贡献者：根据需求实现
+
+    参数模板："{freq}_D{di}双中枢MACD_BS辅助V250211"
+
+    **信号逻辑：**
+
+    1. 最后一笔向下，最近两个中枢依次向下，最后一个中枢最后一笔的MACD DIFF为负且大于第一个中枢第一笔的DIFF，看多；
+    2. 最后一笔向上，最近两个中枢依次向上，最后一个中枢最后一笔的MACD DIFF为正且小于第一个中枢第一笔的DIFF，看空；
+
+    **信号列表：**
+
+    - Signal('15分钟_D1双中枢MACD_BS辅助V250211_看多_任意_任意_0')
+    - Signal('15分钟_D1双中枢MACD_BS辅助V250211_看空_任意_任意_0')
+
+    :param c: CZSC对象
+    :param di: 倒数第 di 笔
+    :return: 信号字典
+    """
+    di = int(kwargs.get("di", 1))
+    # 获取MACD参数并更新缓存
+    cache_key = update_macd_cache(c)
+    
+    k1, k2, k3 = f"{c.freq.value}_D{di}双中枢MACD_BS辅助V250211".split("_")
+    v1 = "其他"
+
+    # 获取最近的笔和中枢序列
+    bis: List[BI] = get_sub_elements(c.bi_list, di=di, n=20)
+    zss = get_zs_seq(bis)
+
+    if len(zss) < 2:
+        return create_single_signal(k1=k1, k2=k2, k3=k3, v1=v1)
+    
+    if len(zss[-2].bis) < 5 or len(zss[-1].bis) < 5:
+        return create_single_signal(k1=k1, k2=k2, k3=k3, v1=v1)
+    
+
+    zs1, zs2 = zss[-2], zss[-1]
+    # 检查这是一个走势
+    if zs1.bis[0].direction != zs2.bis[-1].direction or zs1.bis[0].direction != zs1.bis[-1].direction:
+        return create_single_signal(k1=k1, k2=k2, k3=k3, v1=v1)
+
+    # 判断中枢方向是否向上
+    is_up = zs1.bis[0] == Direction.Up
+    
+    # 获取中枢对应的MACD DIFF值
+    zs1_first_bi = zs1.bis[-2]
+    zs2_last_bi = zs2.bis[-1]
+    
+    
+    # 根据笔方向过滤MACD值：向上笔取正值和，向下笔取负值和
+    zs1_macd = sum([bar.cache[cache_key]['macd'] for bar in zs1_first_bi.fx_b.raw_bars 
+                    if (is_up and bar.cache[cache_key]['macd'] > 0) or
+                        (not is_up and bar.cache[cache_key]['macd'] < 0)])
+    
+    zs2_macd = sum([bar.cache[cache_key]['macd'] for bar in zs2_last_bi.fx_b.raw_bars 
+                    if (is_up and bar.cache[cache_key]['macd'] > 0) or
+                        (not is_up and bar.cache[cache_key]['macd'] < 0)])
+    direction = zs2.sdir
+    # 看多条件：向下笔+中枢下移+DIFF条件
+    if (direction == Direction.Down 
+        and zs2_macd < 0 
+        and zs2_macd > zs1_macd 
+        and zs1.zd > zs2.zg):
+        print("看多", zs1.bis[0].high, zs1.bis[-1].low)
+        print("看多", zs2.bis[0].high, zs1.bis[-1].low)
+        
+        v1 = "看多"
+
+    # 看空条件：向上笔+中枢上移+DIFF条件
+    if (direction == Direction.Up 
+        and zs2_macd > 0 
+        and zs2_macd < zs1_macd 
+        and zs1.zg < zs2.zd):
+        print("看空", zs1.bis[0].low, zs1.bis[-1].high)
+        print("看空", zs2.bis[0].low, zs1.bis[-1].high)
+        v1 = "看空"
+
+    return create_single_signal(k1=k1, k2=k2, k3=k3, v1=v1)
