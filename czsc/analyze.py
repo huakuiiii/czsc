@@ -14,6 +14,7 @@ from czsc.enum import Mark, Direction
 from czsc.objects import BI, FX, RawBar, NewBar, ZS
 from czsc.utils.echarts_plot import kline_pro
 from czsc import envs
+from czsc.utils.sig import get_zs_seq
 
 logger.disable('czsc.analyze')
 
@@ -380,6 +381,19 @@ class CZSC:
         chart = self.to_echarts(width, height)
         chart.render(file_html)
         webbrowser.open(file_html)
+        
+    def to_json(self):
+        """将CZSC对象转换为JSON格式"""
+        bi_list = [bi.to_draw() for bi in self.bi_list]
+        zs_list = get_zs_seq(self.bi_list)
+        return {
+            "symbol": self.symbol,
+            "freq": self.freq.value,
+            "bi_list": bi_list,
+            "klines": [bar.to_json() for bar in self.bars_raw],
+            "zs_list": [zs.to_draw() for zs in zs_list],
+            "signals": self.signals
+        }
 
     @property
     def last_bi_extend(self):

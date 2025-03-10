@@ -61,6 +61,19 @@ class RawBar:
     def solid(self):
         """实体"""
         return abs(self.open - self.close)
+    
+    def to_json(self):
+        """将RawBar对象转换为JSON格式"""
+        timestamp = int(self.dt.tz_localize(beijing_tz).timestamp() * 1000)
+        
+        return {
+            "timestamp": timestamp,
+            "open": self.open,
+            "close": self.close,
+            "high": self.high,
+            "low": self.low,
+            "volume": self.vol
+        }
 
 
 @dataclass
