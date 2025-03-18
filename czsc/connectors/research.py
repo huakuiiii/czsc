@@ -24,11 +24,15 @@ if not os.path.exists(cache_path):
 
 
 def get_groups():
-    """获取投研共享数据的分组信息
+    """获取 cache_path 下所有的投研数据组文件夹的名称
 
     :return: 分组信息
     """
-    return ["A股主要指数", "A股场内基金", "中证500成分股", "期货主力"]
+    if not os.path.exists(cache_path):
+        raise ValueError(f"缓存路径不存在：{cache_path}")
+
+    groups = [name for name in os.listdir(cache_path) if os.path.isdir(os.path.join(cache_path, name))]
+    return groups
 
 
 def get_symbols(name, **kwargs):
