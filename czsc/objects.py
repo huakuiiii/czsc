@@ -18,6 +18,7 @@ from typing import List, Callable, Dict
 from czsc.enum import Mark, Direction, Freq, Operate
 from czsc.utils.corr import single_linear
 from zoneinfo import ZoneInfo
+from typing import TypedDict, List
 
 # 获取北京时间的时区对象
 beijing_tz = ZoneInfo('Asia/Shanghai')
@@ -1216,3 +1217,39 @@ class Position:
                 )
 
         self.holds.append({"dt": self.end_dt, "pos": self.pos, "price": price})
+
+
+class FactorType(TypedDict):
+    name: str
+    signals_all: List[str]
+    signals_any: List[str]
+    signals_not: List[str]
+
+
+class OpenType(TypedDict):
+    name: str
+    operate: str
+    signals_all: List[str]
+    signals_any: List[str]
+    signals_not: List[str]
+    factors: List[FactorType]
+
+
+class ExitType(TypedDict):
+    name: str
+    operate: str
+    signals_all: List[str]
+    signals_any: List[str]
+    signals_not: List[str]
+    factors: List[FactorType]
+
+
+class StrategyType(TypedDict):
+    name: str
+    opens: List[OpenType]
+    exits: List[ExitType]
+    interval: int
+    timeout: int
+    stop_loss: int
+    T0: bool
+    md5: str
